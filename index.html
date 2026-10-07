@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🐍 PyLogic — IF, ELIF & ELSE</title>
+  <link rel="stylesheet" href="css/main.css">
+  <!-- Pyodide CDN -->
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
+  <!-- html2pdf.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body class="bg-dark text-light">
+
+  <!-- Header Global -->
+  <header class="app-header">
+    <div class="header-branding">
+      <span class="logo-icon">🐍</span>
+      <div class="logo-text">
+        <h1>PyLogic</h1>
+        <p>Aprender decisiones con Python • Prof. Andrea Borges</p>
+      </div>
+    </div>
+    
+    <!-- Barra de progreso superior -->
+    <div class="header-progress-container" id="headerProgressBox" style="display: none;">
+      <span class="progress-label" id="progressLabelText">Nivel 1 de 8</span>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="headerProgressBar" style="width: 12.5%;"></div>
+      </div>
+    </div>
+
+    <!-- Botones de Acción Global -->
+    <div class="header-actions">
+      <button class="btn btn-outline" id="btnReporteGlobal" onclick="PyLogic.abrirReporteModal()">📄 REPORTE</button>
+      <button class="btn btn-docente" onclick="PyLogic.abrirModalDocente()">👩‍🏫 PANEL DOCENTE</button>
+    </div>
+  </header>
+
+  <!-- Contenedor Principal de Vistas -->
+  <main id="appContainer" class="main-content">
+
+    <!-- VISTA 1: Registro e Ingreso -->
+    <section id="viewLogin" class="view-section active">
+      <div class="card card-login">
+        <div class="card-header">
+          <h2>👋 ¡Bienvenido/a a PyLogic!</h2>
+          <p>Estructuras Selectivas en Python: <code>if</code>, <code>elif</code> y <code>else</code></p>
+        </div>
+        <form id="formIngreso" onsubmit="PyLogic.registrarEstudiante(event)">
+          <div class="form-group">
+            <label for="inputNombre">Nombre y Apellido:</label>
+            <input type="text" id="inputNombre" required placeholder="Ej: Ana Pérez" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="inputUsuario">Usuario (Crea o ingresa tu identificador):</label>
+            <input type="text" id="inputUsuario" required placeholder="Ej: ana.p" class="form-control">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="inputGrupo">Grupo:</label>
+              <input type="text" id="inputGrupo" required placeholder="Ej: 8°1" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="inputLiceo">Liceo / Institución:</label>
+              <input type="text" id="inputLiceo" required placeholder="Ej: Liceo 53" class="form-control">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">🚀 COMENZAR A APRENDER</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- VISTA 2: Nivel Interactiva / Entorno de Código -->
+    <section id="viewLevel" class="view-section" style="display:none;">
+      <div class="level-layout">
+        <!-- Panel Izquierdo: Consigna y Teoría -->
+        <div class="panel-theory card">
+          <div class="level-badge-header">
+            <span class="badge" id="levelBadge">NIVEL 1</span>
+            <h3 id="levelTitle">¿Qué es una Condición?</h3>
+          </div>
+          <div class="theory-body" id="levelTheory">
+            <!-- Contenido dinámico inyectado desde app.js -->
+          </div>
+          <div class="exercise-consigna card-inner" id="levelConsigna">
+            <!-- Consigna dinámica -->
+          </div>
+          
+          <!-- Notificación Pedagógica de Indicios Externos / IA -->
+          <div id="aiPedagogicalMessage" class="alert alert-info" style="display:none;">
+            💙 <strong>Tu profesora confía en tu capacidad.</strong><br>
+            Este ejercicio está pensado para que puedas resolverlo con lo que aprendiste. Intentá escribir la solución con tus propias ideas. ¡Vos podés hacerlo! 💪🐍
+          </div>
+
+          <div class="hints-container">
+            <button class="btn btn-small btn-warning" onclick="PyLogic.pedirPista()">💡 PISTA (<span id="hintCount">0</span>/3)</button>
+            <div id="hintText" class="hint-display" style="display:none;"></div>
+          </div>
+        </div>
+
+        <!-- Panel Derecho: Editor de Código y Terminal -->
+        <div class="panel-editor card">
+          <div class="editor-header">
+            <span>💻 Editor de Código Python</span>
+            <div class="editor-tools">
+              <button class="btn btn-small btn-secondary" onclick="PyLogic.limpiarEditor()">🗑 LIMPIAR</button>
+            </div>
+          </div>
+          <textarea id="codeEditor" class="code-textarea" spellcheck="false" placeholder="# Escribe tu código Python aquí..."></textarea>
+          
+          <div class="editor-actions">
+            <button class="btn btn-secondary" onclick="PyLogic.ejecutarCodigo()">▶ EJECUTAR</button>
+            <button class="btn btn-success" onclick="PyLogic.comprobarSolucion()">✅ COMPROBAR</button>
+          </div>
+
+          <div class="terminal-container">
+            <div class="terminal-header">🖥️ TERMINAL DE SALIDA</div>
+            <pre id="terminalOutput" class="terminal-body">Presiona 'Ejecutar' para ver la salida del programa...</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VISTA 3: Pantalla de Desafío Final Completado -->
+    <section id="viewFinal" class="view-section" style="display:none;">
+      <div class="card card-final text-center">
+        <h1>🎉 ¡DESAFÍO COMPLETADO!</h1>
+        <p class="subtitle">Has alcanzado el rango de:</p>
+        <div class="master-badge">🏆 PYLOGIC MASTER</div>
+        
+        <div class="grade-box">
+          <span class="grade-title">📝 NOTA PARA LIBRETA</span>
+          <div class="grade-score" id="finalNotaLibreta">-/10</div>
+          <div class="grade-interpretation" id="finalInterpretacion">Cargando...</div>
+        </div>
+
+        <div class="final-stats-grid">
+          <div class="stat-card"><span>Porcentaje:</span> <strong id="finalPorcentaje">0%</strong></div>
+          <div class="stat-card"><span>Correctas:</span> <strong id="finalCorrectas">0/8</strong></div>
+          <div class="stat-card"><span>Intentos:</span> <strong id="finalIntentos">0</strong></div>
+          <div class="stat-card"><span>Pistas Usadas:</span> <strong id="finalPistas">0</strong></div>
+          <div class="stat-card"><span>Tiempo Total:</span> <strong id="finalTiempo">00:00</strong></div>
+        </div>
+
+        <div class="badges-unlocked" id="finalBadgesContainer">
+          <!-- Badges ganadas -->
+        </div>
+
+        <div class="final-actions">
+          <button class="btn btn-primary" onclick="PyLogic.abrirReporteModal()">📄 VER REPORTE</button>
+          <button class="btn btn-success" onclick="PyLogic.descargarPDFReporte()">📥 DESCARGAR PDF</button>
+          <button class="btn btn-secondary" onclick="PyLogic.reiniciarAvance()">🔄 VOLVER A INTENTAR</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: REPORTE DEL ESTUDIANTE -->
+  <div id="modalReporte" class="modal-overlay" style="display:none;">
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <h3>🐍 PyLogic — Reporte de Aprendizaje (IF, ELIF & ELSE)</h3>
+        <button class="btn-close" onclick="PyLogic.cerrarModal('modalReporte')">×</button>
+      </div>
+      <div class="modal-body" id="reporteContenidoImprimible">
+        <div class="report-header-info">
+          <div>
+            <p><strong>Docente:</strong> Andrea Borges</p>
+            <p><strong>Área:</strong> Ciencias Computacionales</p>
+            <p><strong>Estudiante:</strong> <span id="repNombre">-</span> (<span id="repUsuario">-</span>)</p>
+            <p><strong>Grupo:</strong> <span id="repGrupo">-</span> | <strong>Liceo:</strong> <span id="repLiceo">-</span></p>
+          </div>
+          <div class="report-status-box">
+            <span class="report-state-pill" id="repEstadoPill">🟡 En curso</span>
+            <div class="report-main-grade">
+              <small>📝 NOTA PARA LIBRETA</small>
+              <h2 id="repNotaLibreta">-/10</h2>
+            </div>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <h4>📊 Resumen de Desempeño</h4>
+        <div class="stats-summary-bar">
+          <div>Porcentaje: <strong id="repPorcentaje">0%</strong></div>
+          <div>Actividades: <strong id="repActividades">0/8</strong></div>
+          <div>Intentos Totales: <strong id="repIntentos">0</strong></div>
+          <div>Pistas Usadas: <strong id="repPistas">0</strong></div>
+          <div>Tiempo: <strong id="repTiempo">0m</strong></div>
+        </div>
+
+        <h4>📚 Resultados por Nivel</h4>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Nivel</th>
+              <th>Estado</th>
+              <th>Correctas</th>
+              <th>Intentos</th>
+              <th>Pistas</th>
+            </tr>
+          </thead>
+          <tbody id="repTablaNiveles">
+            <!-- Filas inyectadas -->
+          </tbody>
+        </table>
+
+        <h4>🧠 Árease e Indicadores de Aprendizaje</h4>
+        <div class="skills-grid" id="repSkillsGrid">
+          <!-- Competencias -->
+        </div>
+
+        <h4>💻 Código Validado por Nivel (Evidencia de Aprendizaje)</h4>
+        <div id="repCodigoValidadoSec" class="validated-code-container">
+          <!-- Bloques de código de estudiante -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="window.print()">🖨️ IMPRIMIR</button>
+        <button class="btn btn-success" onclick="PyLogic.descargarPDFReporte()">📥 DESCARGAR PDF</button>
+        <button class="btn btn-outline" onclick="PyLogic.cerrarModal('modalReporte')">CERRAR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: PANEL DOCENTE (Acceso Protegido) -->
+  <div id="modalDocente" class="modal-overlay" style="display:none;">
+    <div class="modal-content modal-xl">
+      <div class="modal-header">
+        <h3>👩‍🏫 PANEL DOCENTE — Gestión y Seguimiento de Grupos</h3>
+        <button class="btn-close" onclick="PyLogic.cerrarModal('modalDocente')">×</button>
+      </div>
+      <div class="modal-body">
+        
+        <!-- Pantalla de Login Docente si no autenticado -->
+        <div id="docenteAuthBox" class="card-inner text-center" style="max-width: 400px; margin: 2rem auto;">
+          <h4>🔐 Autenticación Docente</h4>
+          <p>Ingrese la clave de acceso docente:</p>
+          <input type="password" id="inputPassDocente" class="form-control" placeholder="Contraseña">
+          <br>
+          <button class="btn btn-primary btn-block" onclick="PyLogic.autenticarDocente()">INGRESAR AL PANEL</button>
+        </div>
+
+        <!-- Dashboard Docente (Visible tras autenticación) -->
+        <div id="docenteDashboardBox" style="display:none;">
+          <!-- Tarjetas de Resumen General -->
+          <div class="metrics-cards-grid">
+            <div class="metric-card">
+              <span class="m-title">👥 USUARIOS REGISTRADOS</span>
+              <span class="m-value" id="docTotalUsuarios">0</span>
+            </div>
+            <div class="metric-card">
+              <span class="m-title">🟢 USUARIOS ACTIVOS</span>
+              <span class="m-value" id="docUsuariosActivos">0</span>
+            </div>
+            <div class="metric-card">
+              <span class="m-title">✅ FINALIZADOS</span>
+              <span class="m-value" id="docFinalizados">0</span>
+            </div>
+            <div class="metric-card">
+              <span class="m-title">📊 PROMEDIO GENERAL</span>
+              <span class="m-value" id="docPromedioGeneral">0.0 / 10</span>
+            </div>
+          </div>
+
+          <!-- Filtros y Búsqueda -->
+          <div class="filter-toolbar">
+            <input type="text" id="docSearchInput" class="form-control" placeholder="🔍 Buscar por estudiante o usuario..." onkeyup="PyLogic.filtrarTablaDocente()">
+            <select id="docGrupoFilter" class="form-control" onchange="PyLogic.filtrarTablaDocente()">
+              <option value="TODOS">Todos los Grupos</option>
+            </select>
+          </div>
+
+          <!-- Tabla General de Estudiantes -->
+          <h4>👥 Todos los Usuarios Registrados</h4>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Estudiante</th>
+                <th>Usuario</th>
+                <th>Grupo</th>
+                <th>Progreso</th>
+                <th>Nota Libreta</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="docTablaEstudiantes">
+              <!-- Carga de estudiantes -->
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
